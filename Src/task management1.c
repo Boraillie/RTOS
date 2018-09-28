@@ -63,7 +63,6 @@
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 #define mainDELAY_LOOP_COUNT		( 0xfffff )
-	int count = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -74,6 +73,12 @@ void MX_FREERTOS_Init(void);
 /* Private function prototypes -----------------------------------------------*/
 void vTask1( void *pvParameters );
 void vTask2( void *pvParameters );
+void vApplicationIdleHook(void);
+
+int compteur1 = 0;
+int compteur2 = 0;
+
+	TickType_t xLastWakeTime;
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -94,7 +99,6 @@ int main(void)
 
   /* USER CODE BEGIN Init */
 
-	
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -113,7 +117,7 @@ int main(void)
                     "TASK1",          /* Text name for the task. */
                     128,      /* Stack size in words, not bytes. */
                     NULL,    /* Parameter passed into the task. */
-                    tskIDLE_PRIORITY,/* Priority at which the task is created. */
+                    tskIDLE_PRIORITY+2,/* Priority at which the task is created. */
                     NULL );      /* Used to pass out the created task's handle. */
 
 	xTaskCreate( vTask2, "TASK2", 128, NULL, tskIDLE_PRIORITY+1, NULL );
@@ -193,10 +197,7 @@ void vTask1( void *pvParameters )
 {
 	static unsigned long ul;
 	//const char *text = "Task 1 is running\n\r";
-	TickType_t xLastWakeTime; 
-	const TickType_t xFrequency = 10;
 
-	xLastWakeTime = xTaskGetTickCount();
 	
 	/* As per most tasks, this task is implemented in an infinite loop. */
 	for( ;; )
@@ -205,7 +206,8 @@ void vTask1( void *pvParameters )
 		
 		//HAL_UART_Transmit(&huart1,( uint8_t  *) text , strlen(text), 10);  
 	 HAL_GPIO_TogglePin( GPIOB, GPIO_PIN_8);
-	
+	printf("Compteur 1 : %d \n", compteur1);
+		compteur1=0;
 		/* Delay for a period. */
 		for( ul = 0; ul < mainDELAY_LOOP_COUNT; ul++ )
 		{
@@ -214,11 +216,10 @@ void vTask1( void *pvParameters )
 			nothing to do in here.  Later exercises will replace this crude
 			loop with a proper delay/sleep function. */
 		}
-		 
-		 // Wait for the next cycle.
-     vTaskDelayUntil( &xLastWakeTime, xFrequency );
-		printf("count : %d\n", count);
+	
+		vTaskDelayUntil(&xLastWakeTime,250/portTICK_RATE_MS);
 	}
+
 }
 
 void vTask2( void *pvParameters )
@@ -226,6 +227,9 @@ void vTask2( void *pvParameters )
 
 	static unsigned long ul;
 	//const char *text = "Task 2 is running\n\r";
+	
+// Initialise the xLastWakeTime variable with the current time.
+     xLastWakeTime = xTaskGetTickCount();
 
 
 	/* As per most tasks, this task is implemented in an infinite loop. */
@@ -234,8 +238,8 @@ void vTask2( void *pvParameters )
 		/* Print out the name of this task. */
 		//HAL_UART_Transmit(&huart1, ( uint8_t  *) text, strlen(text), 10); 
 		HAL_GPIO_TogglePin( GPIOB, GPIO_PIN_15);
-	
-		
+	printf("Compteur 2 : %d \n", compteur2);
+		compteur2=0;
 		/* Delay for a period. */
 		for( ul = 0; ul < mainDELAY_LOOP_COUNT; ul++ )
 		{
@@ -244,17 +248,16 @@ void vTask2( void *pvParameters )
 			nothing to do in here.  Later exercises will replace this crude
 			loop with a proper delay/sleep function. */
 		}
-		vTaskDelay(250/ portTICK_RATE_MS);
+		vTaskDelay(250/portTICK_RATE_MS);
 	}
+		
 }
 
-void vApplicationIdleHook( void ){
-	count ++;
+void vApplicationIdleHook(void)
+{
+	compteur1++;
+	compteur2++;
 }
-
-
-
-
 
 
 /* USER CODE END 4 */
@@ -314,6 +317,7 @@ void assert_failed(uint8_t* file, uint32_t line)
 }
 
 #endif
+
 /**
   * @}
   */ 
