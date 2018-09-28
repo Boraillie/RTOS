@@ -3,4 +3,6 @@ MDK-ARM/
 Drivers/
 Middlewares/
 .mxproject
-"FreeRTOS PROJECT.ioc"
+'FreeRTOS PROJECT.ioc'
+/FreeRTOS PROJECT.ioc
+/.mxproject
