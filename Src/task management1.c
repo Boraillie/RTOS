@@ -52,6 +52,7 @@
 #include "usart.h"
 #include "gpio.h"
 #include <stdio.h>
+#include "basic_io.h"
 
 /* USER CODE BEGIN Includes */
 
@@ -62,6 +63,7 @@
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 #define mainDELAY_LOOP_COUNT		( 0xfffff )
+	int count = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -92,6 +94,7 @@ int main(void)
 
   /* USER CODE BEGIN Init */
 
+	
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -214,6 +217,7 @@ void vTask1( void *pvParameters )
 		 
 		 // Wait for the next cycle.
      vTaskDelayUntil( &xLastWakeTime, xFrequency );
+		printf("count : %d\n", count);
 	}
 }
 
@@ -243,6 +247,16 @@ void vTask2( void *pvParameters )
 		vTaskDelay(250/ portTICK_RATE_MS);
 	}
 }
+
+void vApplicationIdleHook( void ){
+	count ++;
+}
+
+
+
+
+
+
 /* USER CODE END 4 */
 
 /**
@@ -300,7 +314,6 @@ void assert_failed(uint8_t* file, uint32_t line)
 }
 
 #endif
-
 /**
   * @}
   */ 
