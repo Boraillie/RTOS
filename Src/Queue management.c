@@ -125,7 +125,7 @@ int main(void)
   /* USER CODE END 2 */
 
   /* Call init function for freertos objects (in freertos.c) */
- xQueue1 = xQueueCreate( 16, sizeof( message *) );
+ xQueue1 = xQueueCreate( 16, sizeof( message) );
 // xQueue2 = xQueueCreate( 16, sizeof( int) );
 
 xTaskCreate(      task_emet_1,       /* Function that implements the task. */
@@ -224,17 +224,19 @@ void task_emet_1 (void *pvParameters) {
 
 //		srand(1515);							/* Init générateur aléatoire */
 		nb_envois = 0;
-		message *pxMessage1;
-		pxMessage1->id_emetteur = 1;
-		pxMessage1->valeur = nb_envois;
+		message message1;
+		message1.id_emetteur = 1;
+		message1.valeur = nb_envois;
+		message *pxMessage1 = &message1;
+		
 	
   	while (1)  {                        
 
 
 
 					nb_envois++;
-					pxMessage1->valeur = nb_envois;
-					xQueueSend( xQueue1, ( void * ) &pxMessage1,  portMAX_DELAY );
+					message1.valeur = nb_envois;
+					xQueueSend( xQueue1, ( void * ) pxMessage1,  portMAX_DELAY );
 
 			
 			/* envoie et Attente en cas de mailbox pleine */
@@ -252,11 +254,12 @@ void task_emet_2 (void *pvParameters) {
 	static int nb_envois;
 
 	//	srand(1515);							/* Init générateur aléatoire */
+
 		nb_envois = 0;
-	
-		message *pxMessage2;
-		pxMessage2->id_emetteur = 2;
-		pxMessage2->valeur = nb_envois;
+		message message2;
+		message2.id_emetteur = 2;
+		message2.valeur = nb_envois;
+		message *pxMessage2 = &message2;
 	
   	while (1)  {                        
 
@@ -267,8 +270,8 @@ void task_emet_2 (void *pvParameters) {
 
 
 				nb_envois++;
-				pxMessage2->valeur = nb_envois;
-				xQueueSend( xQueue1, ( void * ) &pxMessage2,  portMAX_DELAY );
+				message2.valeur = nb_envois;
+				xQueueSend( xQueue1, ( void * ) pxMessage2,  portMAX_DELAY );
 
 		/* En sommeil pendant un temps aléatoire, pas infini quand même ! */
 //		vTaskDelay(  (int) ((rand() & 0x00ff ) | 0x0001) / portTICK_RATE_MS );
@@ -286,17 +289,19 @@ void task_recept (void *pvParameters) {
 //	int rec_mess;
 //	int rec_mess2;
 //				  
-	message *pxMessage_recu;
+
+		message message_recu;
+		message *pxMessage_recu = &message_recu;
 	
 	nb_recus1 = 0;
 	//nb_recus2 = 0;
 
   	while ( nb_recus1 != 40 )  { 
 			
-			if(xQueueReceive( xQueue1, &pxMessage_recu, portMAX_DELAY  ))
+			if(xQueueReceive( xQueue1, pxMessage_recu, portMAX_DELAY  ))
 			{			
 				nb_recus1++;
-				printf( " Recu de %d le no %d \n",pxMessage_recu->id_emetteur, pxMessage_recu->valeur  );	
+				printf( " Recu de %d le no %d \n",message_recu.id_emetteur, message_recu.valeur  );	
 			}
 			
 			
