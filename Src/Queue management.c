@@ -68,9 +68,12 @@ typedef struct {
 		int valeur;
 } message;
 
+
+
+
 unsigned long ulIdleCycleCount;
 QueueHandle_t xQueue1;
-QueueHandle_t xQueue2;
+//QueueHandle_t xQueue2;
 
 
 /* USER CODE END PV */
@@ -122,8 +125,8 @@ int main(void)
   /* USER CODE END 2 */
 
   /* Call init function for freertos objects (in freertos.c) */
- xQueue1 = xQueueCreate( 16, sizeof( int) );
- xQueue2 = xQueueCreate( 16, sizeof( int) );
+ xQueue1 = xQueueCreate( 16, sizeof( message *) );
+// xQueue2 = xQueueCreate( 16, sizeof( int) );
 
 xTaskCreate(      task_emet_1,       /* Function that implements the task. */
                     "TASK1",          /* Text name for the task. */
@@ -143,7 +146,7 @@ xTaskCreate(      task_recept,       /* Function that implements the task. */
                     "TASK3",          /* Text name for the task. */
                     128,      /* Stack size in words, not bytes. */
                     NULL,    /* Parameter passed into the task. */
-                    tskIDLE_PRIORITY+1,/* Priority at which the task is created. */
+                    tskIDLE_PRIORITY+2,/* Priority at which the task is created. */
                     NULL );      /* Used to pass out the created task's handle. */
   /* Start scheduler */
 	vTaskStartScheduler();
@@ -219,17 +222,25 @@ void task_emet_1 (void *pvParameters) {
   
 	static int nb_envois;
 
-		srand(1515);							/* Init générateur aléatoire */
+//		srand(1515);							/* Init générateur aléatoire */
 		nb_envois = 0;
+		message *pxMessage1;
+		pxMessage1->id_emetteur = 1;
+		pxMessage1->valeur = nb_envois;
 	
   	while (1)  {                        
 
-		nb_envois++;
 
+
+					nb_envois++;
+					pxMessage1->valeur = nb_envois;
+					xQueueSend( xQueue1, ( void * ) &pxMessage1,  portMAX_DELAY );
+
+			
 			/* envoie et Attente en cas de mailbox pleine */
-		xQueueSend( xQueue1, ( void * ) &nb_envois,  portMAX_DELAY );
+	
 		/* En sommeil pendant un temps aléatoire, pas infini quand même ! */
-		vTaskDelay(  (int) ((rand() & 0x00ff ) | 0x0001) / portTICK_RATE_MS );
+//		vTaskDelay(  (int) ((rand() & 0x00ff ) | 0x0001) / portTICK_RATE_MS );
   	
 			if ( nb_envois >= 20 ) vTaskDelete( NULL );
 
@@ -240,17 +251,27 @@ void task_emet_2 (void *pvParameters) {
   
 	static int nb_envois;
 
-		srand(1515);							/* Init générateur aléatoire */
+	//	srand(1515);							/* Init générateur aléatoire */
 		nb_envois = 0;
+	
+		message *pxMessage2;
+		pxMessage2->id_emetteur = 2;
+		pxMessage2->valeur = nb_envois;
 	
   	while (1)  {                        
 
-		nb_envois++;
-
+//			nb_envois++;
+//			message2.valeur = nb_envois;
 			/* envoie et Attente en cas de mailbox pleine */
-		xQueueSend( xQueue2, ( void * ) &nb_envois,  portMAX_DELAY );
+//		xQueueSend( xQueue2, ( void * ) &nb_envois,  portMAX_DELAY );
+
+
+				nb_envois++;
+				pxMessage2->valeur = nb_envois;
+				xQueueSend( xQueue1, ( void * ) &pxMessage2,  portMAX_DELAY );
+
 		/* En sommeil pendant un temps aléatoire, pas infini quand même ! */
-		vTaskDelay(  (int) ((rand() & 0x00ff ) | 0x0001) / portTICK_RATE_MS );
+//		vTaskDelay(  (int) ((rand() & 0x00ff ) | 0x0001) / portTICK_RATE_MS );
   	
 			if ( nb_envois >= 20 ) vTaskDelete( NULL );
 
@@ -261,29 +282,30 @@ void task_emet_2 (void *pvParameters) {
 
 void task_recept (void *pvParameters) {
   int  nb_recus1 ;
-	 int  nb_recus2 ;
-	int rec_mess;
-	int rec_mess2;
-				  
+//	int  nb_recus2 ;
+//	int rec_mess;
+//	int rec_mess2;
+//				  
+	message *pxMessage_recu;
 	
 	nb_recus1 = 0;
-	nb_recus2 = 0;
+	//nb_recus2 = 0;
 
-  	while ( nb_recus1 != 20 && nb_recus2 !=20 )  { 
+  	while ( nb_recus1 != 40 )  { 
 			
-			if(xQueueReceive( xQueue1, &rec_mess, 0x0f  ))
-			{
+			if(xQueueReceive( xQueue1, &pxMessage_recu, portMAX_DELAY  ))
+			{			
 				nb_recus1++;
-				printf( " Recu de 1 le no %d \n", rec_mess );	
+				printf( " Recu de %d le no %d \n",pxMessage_recu->id_emetteur, pxMessage_recu->valeur  );	
 			}
 			
 			
-			
-			if(xQueueReceive( xQueue2, &rec_mess2, 0x0f  ))
-			{
-				nb_recus2++;
-				printf( " Recu de 2 le no %d \n", rec_mess2 );
-			}
+//			
+//			if(xQueueReceive( xQueue2, &rec_mess2, 0x0f  ))
+//			{
+//				nb_recus2++;
+//				printf( " Recu de 2 le no %d \n", rec_mess2 );
+//			}
 	
  	}
 
