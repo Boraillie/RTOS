@@ -298,7 +298,7 @@ static char cpt;
 
 		switch  ( ph ) {
 
-		case 1: 
+		case 1: // Voie 1 va passer au vert, voie 2 arrêtée
 		{		
 				HAL_GPIO_WritePin(GPIOB,R1_Pin|O1_Pin|R2_Pin, 1);
 				HAL_GPIO_WritePin(GPIOB, V1_Pin|S1_Pin|V2_Pin|O2_Pin|S2_Pin, 0);
@@ -308,15 +308,15 @@ static char cpt;
 		}
 		break; 
 
-		case 2:
+		case 2: // Voie 1 au vert, voie 2 rouge, piéton 2 vert
 		{
 				 HAL_GPIO_WritePin(GPIOB,V1_Pin|S2_Pin|R2_Pin, 1);
 				 HAL_GPIO_WritePin(GPIOB,R1_Pin|O1_Pin|V2_Pin|O2_Pin|S1_Pin, 0);
-				if (( ++cpt > 8 ) || DPV1 || ( detect2&&!detect1&&!DPV2 )  ) ph = 3;					
+				if (( ++cpt > 8 ) || DPV1 || ( detect2&&!detect1&&!DPV2 )  ) ph = 3; //Si timer || Si appuie pétion 1 || (voiture à 2 sans piétion2 & sans voiture1)		
 		}
 		break;
 
-		case 3:
+		case 3: // Arrêt passage voie 1 => orange 1
 		{		
 				HAL_GPIO_WritePin(GPIOB, O1_Pin|R2_Pin, 1);
 				HAL_GPIO_WritePin (GPIOB, R1_Pin|V1_Pin|S1_Pin|V2_Pin|O2_Pin|S2_Pin, 0);
@@ -324,7 +324,7 @@ static char cpt;
 		}
 		break;
 
-		case 4:
+		case 4: // Passage rouge 1 et transition 2 vers vert
 		{		
 				HAL_GPIO_WritePin (GPIOB, R1_Pin|R2_Pin|O2_Pin, 1);
 				HAL_GPIO_WritePin (GPIOB, V1_Pin|O1_Pin|S1_Pin|V2_Pin|S2_Pin, 0);
@@ -334,15 +334,15 @@ static char cpt;
 		}
 		break;
 
-		case 5:
+		case 5: // Piétion 1 vert et voiture2 vert
 		{
 				HAL_GPIO_WritePin (GPIOB, R1_Pin|V2_Pin|S1_Pin, 1);
 				HAL_GPIO_WritePin(GPIOB, V1_Pin|O1_Pin|S2_Pin|R2_Pin|O2_Pin, 0);	
-				if (( ++cpt > 8 ) || DPV2 || ( detect1&&!detect2&&!DPV1 )) ph = 6;		
+				if (( ++cpt > 8 ) || DPV2 || ( detect1&&!detect2&&!DPV1 )) ph = 6;	// complément cond ph2->3
 		}
 		break;
 
-		case 6:
+		case 6: //passage vert -> rouge voie 2, voie 1 rouge 
 		{
 				HAL_GPIO_WritePin (GPIOB, R1_Pin|O2_Pin, 1);
 				HAL_GPIO_WritePin (GPIOB, V1_Pin|O1_Pin|S1_Pin|R2_Pin|V2_Pin|S2_Pin, 0);
