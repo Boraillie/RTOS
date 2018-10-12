@@ -53,6 +53,8 @@
 #include "gpio.h"
 #include <stdio.h>
 #include "basic_io.h"
+#include <string.h>
+#include "LCD.h"
  
 /* USER CODE BEGIN Includes */
  
@@ -124,6 +126,7 @@ int main(void)
 		semaph = xSemaphoreCreateMutex();
     xRxQueue = xQueueCreate(10,sizeof(uint8_t));
     xTxQueue = xQueueCreate(30,sizeof(uint8_t));
+				lcd_init ();
  
   /* USER CODE BEGIN 2 */
  
@@ -157,6 +160,7 @@ int main(void)
  
   /* Start scheduler */
     vTaskStartScheduler();
+
   
   /* We should never get here as control is now taken by the scheduler */
  
@@ -229,7 +233,7 @@ void chrono (void *pvParameters) {
   
   TickType_t xLastWakeTime;
   //const TickType_t xFrequency = 200 / portTICK_RATE_MS;
-    
+	char buff[50];
     
   xLastWakeTime = xTaskGetTickCount();
   xSemaphoreTake(semaph, portMAX_DELAY);
@@ -243,7 +247,13 @@ void chrono (void *pvParameters) {
         }
       }
     }
+		
     printf( "Chronometre: %02d: %02d: %02d \r", horloge.heure, horloge.min, horloge.sec );
+		sprintf(buff, "%02d: %02d: %02d", horloge.heure, horloge.min, horloge.sec);
+		lcd_clear();
+		lcd_print("chr :");
+		lcd_print(buff);
+
 	xSemaphoreGive (semaph);
      vTaskDelayUntil( &xLastWakeTime, 1000 );        /* wait for 1 second                  */
   }
@@ -270,12 +280,15 @@ void updateval (void *pvParameters) {
         xQueueReceive(xRxQueue,&buffer,portMAX_DELAY);
         if (buffer==27) {
             printf( "Veuillez rentrer une heure\r");
+//						lcd_print("Veuillez rentrer une heure");
 						modif_pos = 1;
         }
         else if (buffer!=27){
 						if(modif_pos == 1){
 							uint+=buffer;
-							printf("L'heure s'updatera à la prochaine seconde, bisous <3\r");
+							printf("L'heure s'updatera à la prochaine seconde\r");
+//							lcd_clear();
+//							lcd_print("L'heure s'updatera à la prochaine seconde");
 							xSemaphoreTake(semaph, portMAX_DELAY);
 							horloge.heure = buffer -48;
 							xSemaphoreGive (semaph);
