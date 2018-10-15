@@ -3,7 +3,7 @@
 <title>Static Call Graph - [Projet Traffic\Projet Traffic.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image Projet Traffic\Projet Traffic.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060528: Last Updated: Mon Oct 15 10:45:39 2018
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060528: Last Updated: Mon Oct 15 11:28:37 2018
 <BR><P>
 <H3>Maximum Stack Usage =        336 bytes + Unknown(Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
@@ -842,6 +842,7 @@ Global Symbols
 <BR><BR>[Stack]<UL><LI>Max Depth = 24<LI>Call Chain = __2printf
 </UL>
 <BR>[Called By]<UL><LI><a href="#[a1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;sequenceur
+<LI><a href="#[40]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;lecture_BP
 <LI><a href="#[9c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;lect_H
 <LI><a href="#[3f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;command
 </UL>
@@ -974,12 +975,13 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[3f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;command
 </UL>
 
-<P><STRONG><a name="[40]"></a>lecture_BP</STRONG> (Thumb, 88 bytes, Stack size 8 bytes, traffic8.o(i.lecture_BP))
+<P><STRONG><a name="[40]"></a>lecture_BP</STRONG> (Thumb, 100 bytes, Stack size 8 bytes, traffic8.o(i.lecture_BP))
 <BR><BR>[Stack]<UL><LI>Max Depth = 80<LI>Call Chain = lecture_BP &rArr; vTaskDelayUntil &rArr; xTaskResumeAll &rArr; xTaskIncrementTick
 </UL>
 <BR>[Calls]<UL><LI><a href="#[9d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;xTaskGetTickCount
 <LI><a href="#[a0]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;vTaskDelayUntil
 <LI><a href="#[ad]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GPIO_ReadPin
+<LI><a href="#[96]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__2printf
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> traffic8.o(i.main)
 </UL>
@@ -1032,8 +1034,8 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[c4]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;prvInitialiseNewTask
 </UL>
 
-<P><STRONG><a name="[9f]"></a>seqtrain</STRONG> (Thumb, 170 bytes, Stack size 16 bytes, traffic8.o(i.seqtrain))
-<BR><BR>[Stack]<UL><LI>Max Depth = 16<LI>Call Chain = seqtrain
+<P><STRONG><a name="[9f]"></a>seqtrain</STRONG> (Thumb, 354 bytes, Stack size 40 bytes, traffic8.o(i.seqtrain))
+<BR><BR>[Stack]<UL><LI>Max Depth = 40<LI>Call Chain = seqtrain
 </UL>
 <BR>[Calls]<UL><LI><a href="#[85]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GPIO_WritePin
 <LI><a href="#[ce]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GPIO_TogglePin

@@ -301,9 +301,11 @@ void lecture_BP  (void *pvParameters) {
 		if ( HAL_GPIO_ReadPin (GPIOC, SW1_Pin)) {	
 		train = 1;
 	  ph = 6;	  
+		printf("le train arrive \n");
 		}
 		if ( HAL_GPIO_ReadPin (GPIOC, SW2_Pin)) {
 		train = 0;
+		printf("le train repart \n");
 		
 		}
 		vTaskDelayUntil( &xLastWakeTime, 50/ portTICK_PERIOD_MS);
@@ -472,8 +474,11 @@ static char cpt;
 	
 }
 
+
+// SEQUENCEUR LORSQUE LE TRAIN PASSE
 void seqtrain (bool valid_seq)
 {
+	static char cpt_train;
 	
 	if(!modeManuel){
 		if ( valid_seq ) {
@@ -485,7 +490,7 @@ void seqtrain (bool valid_seq)
 					HAL_GPIO_WritePin(GPIOB, V1_Pin|S1_Pin|V2_Pin|O2_Pin|S2_Pin, 0);
 					phtrain = 2;
 					ph = 2;
-					DPV1 = DPV2 = detect1 = detect2 = 0;	
+					DPV1 = DPV2 = detect1 = detect2 = 0;
 			}
 			break; 
 
@@ -495,6 +500,10 @@ void seqtrain (bool valid_seq)
 					 HAL_GPIO_WritePin(GPIOB,R1_Pin|O1_Pin|V2_Pin|O2_Pin|S1_Pin, 0);
 					 phtrain = 2;
 					 ph = 3;
+					 if (DPV1)	{
+						phtrain = 4;	
+						cpt_train = 0;
+					}
 			}
 			break;
 
@@ -507,6 +516,45 @@ void seqtrain (bool valid_seq)
 					ph = 1;
 			}
 			break;
+			
+			case 4:
+				{		
+						HAL_GPIO_WritePin(GPIOB, O1_Pin, 1);
+			      HAL_GPIO_WritePin (GPIOB, R1_Pin|V1_Pin|S1_Pin, 0);
+						ph = 4;
+						phtrain = 5; 
+						DPV1 = 0;
+				}
+			break;
+			case 5:
+				{		
+						HAL_GPIO_WritePin(GPIOB, R1_Pin|S1_Pin, 1);
+						HAL_GPIO_WritePin (GPIOB, O1_Pin|V1_Pin, 0);
+						ph=5;
+						if ( ++cpt_train > 8 ) phtrain = 6;			
+				}
+			break;
+			case 6:
+				{		
+						HAL_GPIO_WritePin (GPIOB, R1_Pin, 1);
+					  HAL_GPIO_WritePin (GPIOB, V1_Pin|O1_Pin|S1_Pin, 0);
+						ph=1;
+					  phtrain = 7;
+							
+				}
+			break;
+			case 7:
+				{		
+						HAL_GPIO_WritePin(GPIOB,R1_Pin|O1_Pin, 1);
+					  HAL_GPIO_WritePin(GPIOB, V1_Pin|S1_Pin, 0);
+						ph=2;
+						if ( ++cpt_train > 8 ) phtrain = 2;			
+				}
+			break;
+			
+			
+			
+			
 			}
 		}
 		else {
