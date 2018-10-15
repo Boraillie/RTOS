@@ -53,6 +53,7 @@
 #include "gpio.h"
 #include "tim.h"
 #include "stm32_hal_legacy.h"
+#include "LCD.h"
 
 
 /* USER CODE BEGIN Includes */
@@ -127,7 +128,7 @@ bool escape;
 bool capteur;
  
  bool manu; // Mode manuel ON
- bool suiv; // Passage à l'etape suivante
+ bool suiv; // Passage ï¿½ l'etape suivante
 
 /* USER CODE END Includes */
 /* USER CODE END PV */
@@ -145,6 +146,8 @@ void sequenceur (bool);
 bool generation_temps ( void) ;
 bool lect_H (char  * )	;
 bool moteur_barriere(bool sens); // 1 = lever 0 = baisser
+void affichage_LCD (bool);
+
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -191,6 +194,8 @@ int main(void)
 	HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_4);
 	
 	HAL_TIM_Base_Start(&htim3);
+	lcd_init();
+
 
   /* USER CODE BEGIN 2 */
  xTaskCreate(      controleur,       /* Function that implements the task. */
@@ -505,6 +510,24 @@ bool lect_H (char  *buffer)  {
   return (1);
 }
 
+
+/****************************************************************************/
+/*       				FONCTION Affichage LCD									*/
+/****************************************************************************/
+
+void affichage_LCD (bool passage_autorise) {
+	lcd_clear();
+	if (passage_autorise) lcd_print("Passage Autorise" ); //barriï¿½te levee
+	else {
+		lcd_print("DANGER !");															//barriï¿½re baissee ou en cours de mouvement
+		set_cursor (0, 1);
+		lcd_print("Passage INTERDIT" );
+	}
+}
+
+
+
+
 /****************************************************************************/
 /*       				TACHE	CONTROLEUR									*/
 /****************************************************************************/
@@ -574,39 +597,32 @@ void command  (void *pvParameters) {
 					}
 				break;
 
-					case 'F':                                		// Set End Time Command     
-							if ( lect_H (&cmde[i+1]))  {        		// read time input and       
-									fin.heure = v_temps.heure;               // store in 'end'           
-									fin.min  = v_temps.min;
-									fin.sec  = v_temps.sec;
-							 }
-						break;
+				case 'F':                                		// Set End Time Command     
+						if ( lect_H (&cmde[i+1]))  {        		// read time input and       
+								fin.heure = v_temps.heure;               // store in 'end'           
+								fin.min  = v_temps.min;
+								fin.sec  = v_temps.sec;
+						 }
+					break;
 
-						case 'D':                                // Set Start Time Command    
-							if ( lect_H (&cmde[i+1]))  {        // read time input and       
-									debut.heure = v_temps.heure;             // store in 'start'       
-									debut.min   = v_temps.min;
-									debut.sec   = v_temps.sec;
-						}
-						break;
-						
-						case 'M':
-							printf("\nMode Manuel\n");
-							manu = true;
-						break;
-						
-						case 'E':
-								manu = false;
-								printf ("\nMode automatique\n");
-						break;
-						
-						case 'A':   
-							printf("motor");
-							__HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_3, 128);
-							__HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_4, 0);
-						
-						break;
+					case 'D':                                // Set Start Time Command    
+						if ( lect_H (&cmde[i+1]))  {        // read time input and       
+								debut.heure = v_temps.heure;             // store in 'start'       
+								debut.min   = v_temps.min;
+								debut.sec   = v_temps.sec;
 					}
+					break;
+					
+					case 'M':
+						printf("\nMode Manuel\n");
+						manu = true;
+					break;
+					
+					case 'E':
+							manu = false;
+							printf ("\nMode automatique\n");
+					break;
+					
 				}   
 			
 			else if (c == N || c == n) {
