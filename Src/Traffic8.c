@@ -307,10 +307,15 @@ static char cpt;
 				HAL_GPIO_WritePin(GPIOB, V1_Pin|S1_Pin|V2_Pin|O2_Pin|S2_Pin, 0);
 				cpt= 0;
 				if (manu) {
-					while (!suiv);
-					suiv = false;
+					if (suiv) {
+						suiv = false;
+						ph = 2;
+					}
 				}
-				ph = 2;
+				else {
+					ph = 2;
+				}
+				
 				DPV1 = DPV2 = detect1 = detect2 = 0;
 		}
 		break; 
@@ -323,9 +328,10 @@ static char cpt;
 					if (( ++cpt > 8 ) || DPV1 || ( detect2&&!detect1&&!DPV2 )  ) ph = 3; //Si timer || Si appuie p�tion 1 || (voiture � 2 sans pi�tion2 & sans voiture1)		
 				}
 				else {
-					while (!suiv);
-					suiv = false;
-					ph = 3;
+					if (suiv) {
+						suiv = false;
+						ph = 3;
+					}
 				}
 		}
 		break;
@@ -335,10 +341,14 @@ static char cpt;
 				HAL_GPIO_WritePin(GPIOB, O1_Pin|R2_Pin, 1);
 				HAL_GPIO_WritePin (GPIOB, R1_Pin|V1_Pin|S1_Pin|V2_Pin|O2_Pin|S2_Pin, 0);
 				if (manu) {
-					while (!suiv);
-					suiv = false;
+					if (suiv) {
+						suiv = false;
+						ph = 4;
+					}
 				}
-				ph = 4;			
+				else {
+					ph = 4;
+				}	
 		}
 		break;
 
@@ -348,10 +358,14 @@ static char cpt;
 				HAL_GPIO_WritePin (GPIOB, V1_Pin|O1_Pin|S1_Pin|V2_Pin|S2_Pin, 0);
 				cpt = 0;
 				if (manu) {
-					while (!suiv);
-					suiv = false;
+					if (suiv) {
+						suiv = false;
+						ph = 5;
+					}
 				}
-				ph = 5;	
+				else {
+					ph = 5;
+				}
 				DPV1 = DPV2 = detect1 = detect2 = 0;
 		}
 		break;
@@ -364,9 +378,10 @@ static char cpt;
 					if (( ++cpt > 8 ) || DPV2 || ( detect1&&!detect2&&!DPV1 )) ph = 6;	// compl�ment cond ph2->3
 				}
 				else {
-					while (!suiv);
-					suiv = false;
-					ph = 6;
+					if (suiv) {
+						suiv = false;
+						ph = 6;
+					}
 				}
 		}
 		break;
@@ -376,10 +391,14 @@ static char cpt;
 				HAL_GPIO_WritePin (GPIOB, R1_Pin|O2_Pin, 1);
 				HAL_GPIO_WritePin (GPIOB, V1_Pin|O1_Pin|S1_Pin|R2_Pin|V2_Pin|S2_Pin, 0);
 				if (manu) {
-					while (!suiv);
-					suiv = false;
+					if (suiv) {
+						suiv = false;
+						ph = 1;
+					}
 				}
-				ph = 1;		
+				else {
+					ph = 1;
+				}		
 		}
 		break;
 		}
