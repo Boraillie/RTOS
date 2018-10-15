@@ -51,8 +51,6 @@
 #include "cmsis_os.h"
 #include "usart.h"
 #include "gpio.h"
-#include "tim.h"
-#include "stm32_hal_legacy.h"
 
 
 /* USER CODE BEGIN Includes */
@@ -77,7 +75,6 @@
 #define LF         0x0A
 #define N 				 0x4E
 #define n 				 0x6E
-#define A   			 0x41
 
 const char menu[] = 
  
@@ -135,6 +132,7 @@ bool capteur;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 
+
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
 void controleur( void *pvParameters );
@@ -144,7 +142,6 @@ void lecture_BP (void *pvParameters);
 void sequenceur (bool);
 bool generation_temps ( void) ;
 bool lect_H (char  * )	;
-bool moteur_barriere(bool sens); // 1 = lever 0 = baisser
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -180,17 +177,6 @@ int main(void)
   MX_GPIO_Init();
   MX_USART1_UART_Init();
 	__HAL_UART_ENABLE_IT(  &huart1,UART_IT_RXNE );
-	
-	MX_TIM2_Init();
-  MX_TIM3_Init();
-	HAL_TIM_PWM_Init( &htim2);
-	
-	__HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_3, 0);
-	__HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_4, 0);
-	HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_3);
-	HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_4);
-	
-	HAL_TIM_Base_Start(&htim3);
 
   /* USER CODE BEGIN 2 */
  xTaskCreate(      controleur,       /* Function that implements the task. */
@@ -599,16 +585,8 @@ void command  (void *pvParameters) {
 								manu = false;
 								printf ("\nMode automatique\n");
 						break;
-						
-						case 'A':   
-							printf("motor");
-							__HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_3, 128);
-							__HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_4, 0);
-						
-						break;
-					}
 				}   
-			
+			}
 			else if (c == N || c == n) {
 				if (manu) {
 					printf("\nEtape suivante\n");
