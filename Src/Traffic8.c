@@ -121,6 +121,7 @@ volatile bool DPV2;
 volatile bool detect1;
 volatile bool	detect2;
 char ph;
+char phtrain;
 char task;
 bool escape;
 bool capteur;
@@ -141,6 +142,7 @@ void command  (void *pvParameters);
 void lecture_BP (void *pvParameters);
 
 void sequenceur (bool);
+void seqtrain (bool);
 bool generation_temps ( void) ;
 bool lect_H (char  * )	;
 /* USER CODE END PFP */
@@ -148,6 +150,7 @@ bool lect_H (char  * )	;
 /* USER CODE BEGIN 0 */
 QueueHandle_t xRxQueue;
 QueueHandle_t xTxQueue;
+SemaphoreHandle_t semaph;
 /* USER CODE END 0 */
 
 int main(void)
@@ -297,7 +300,7 @@ void lecture_BP  (void *pvParameters) {
 						 					                           // Scrutation des touches toutes les 50ms
 		if ( HAL_GPIO_ReadPin (GPIOC, SW1_Pin)) {	
 		train = 1;
-	  
+	  ph = 6;	  
 		}
 		if ( HAL_GPIO_ReadPin (GPIOC, SW2_Pin)) {
 		train = 0;
@@ -325,6 +328,7 @@ static char cpt;
 					HAL_GPIO_WritePin(GPIOB, V1_Pin|S1_Pin|V2_Pin|O2_Pin|S2_Pin, 0);
 					cpt= 0;
 					ph = 2;
+					phtrain = 2;
 					DPV1 = DPV2 = detect1 = detect2 = 0;	
 			}
 			break; 
@@ -333,9 +337,9 @@ static char cpt;
 			{
 					 HAL_GPIO_WritePin(GPIOB,V1_Pin|S2_Pin|R2_Pin, 1);
 					 HAL_GPIO_WritePin(GPIOB,R1_Pin|O1_Pin|V2_Pin|O2_Pin|S1_Pin, 0);
-					if (( ++cpt > 8 ) || DPV1 || ( detect2&&!detect1&&!DPV2 )  ) 
-					{
-						if (train == 0) ph = 3;
+					if (( ++cpt > 8 ) || DPV1 || ( detect2&&!detect1&&!DPV2 )  ) {
+					ph = 3;
+					phtrain = 2;
 					}
 			}
 			break;
@@ -345,7 +349,8 @@ static char cpt;
 				
 					HAL_GPIO_WritePin(GPIOB, O1_Pin|R2_Pin, 1);
 					HAL_GPIO_WritePin (GPIOB, R1_Pin|V1_Pin|S1_Pin|V2_Pin|O2_Pin|S2_Pin, 0);
-					ph = 4;			
+					ph = 4;	
+					phtrain = 3;
 			}
 			break;
 
@@ -355,6 +360,7 @@ static char cpt;
 					HAL_GPIO_WritePin (GPIOB, V1_Pin|O1_Pin|S1_Pin|V2_Pin|S2_Pin, 0);
 					cpt = 0;
 					ph = 5;	
+					phtrain = 3;
 					DPV1 = DPV2 = detect1 = detect2 = 0;
 			}
 			break;
@@ -363,7 +369,10 @@ static char cpt;
 			{
 					HAL_GPIO_WritePin (GPIOB, R1_Pin|V2_Pin|S1_Pin, 1);
 					HAL_GPIO_WritePin(GPIOB, V1_Pin|O1_Pin|S2_Pin|R2_Pin|O2_Pin, 0);	
-					if (( ++cpt > 8 ) || DPV2 || ( detect1&&!detect2&&!DPV1 )) ph = 6;		
+					if (( ++cpt > 8 ) || DPV2 || ( detect1&&!detect2&&!DPV1 )) {
+						ph = 6;
+						phtrain = 3;
+					}
 			}
 			break;
 
@@ -371,7 +380,8 @@ static char cpt;
 			{
 					HAL_GPIO_WritePin (GPIOB, R1_Pin|O2_Pin, 1);
 					HAL_GPIO_WritePin (GPIOB, V1_Pin|O1_Pin|S1_Pin|R2_Pin|V2_Pin|S2_Pin, 0);
-					ph = 1;		
+					ph = 1;	
+					phtrain = 1;
 			}
 			break;
 			}
@@ -462,7 +472,50 @@ static char cpt;
 	
 }
 
+void seqtrain (bool valid_seq)
+{
+	
+	if(!modeManuel){
+		if ( valid_seq ) {
 
+			switch  ( phtrain ) {
+			case 1: 
+			{		
+					HAL_GPIO_WritePin(GPIOB,R1_Pin|O1_Pin|R2_Pin, 1);
+					HAL_GPIO_WritePin(GPIOB, V1_Pin|S1_Pin|V2_Pin|O2_Pin|S2_Pin, 0);
+					phtrain = 2;
+					ph = 2;
+					DPV1 = DPV2 = detect1 = detect2 = 0;	
+			}
+			break; 
+
+			case 2:
+			{
+					 HAL_GPIO_WritePin(GPIOB,V1_Pin|S2_Pin|R2_Pin, 1);
+					 HAL_GPIO_WritePin(GPIOB,R1_Pin|O1_Pin|V2_Pin|O2_Pin|S1_Pin, 0);
+					 phtrain = 2;
+					 ph = 3;
+			}
+			break;
+
+
+			case 3:
+			{
+					HAL_GPIO_WritePin (GPIOB, R1_Pin|O2_Pin, 1);
+					HAL_GPIO_WritePin (GPIOB, V1_Pin|O1_Pin|S1_Pin|R2_Pin|V2_Pin|S2_Pin, 0);
+					phtrain = 1;
+					ph = 1;
+			}
+			break;
+			}
+		}
+		else {
+			HAL_GPIO_WritePin (GPIOB, R1_Pin|V1_Pin|S1_Pin|R2_Pin|V2_Pin|S2_Pin, 0);
+			HAL_GPIO_TogglePin(GPIOB,O1_Pin);
+			HAL_GPIO_TogglePin(GPIOB, O2_Pin);
+		}
+	}
+}
 /****************************************************************************/
 /*               	FONCTION 	GENERATION TEMPS							*/
 /****************************************************************************/
@@ -545,11 +598,18 @@ void controleur  (void *pvParameters) {
 	
 	
  	ph = 1;
+	phtrain = 3;
 	// Initialise the xLastWakeTime variable with the current time.
   xLastWakeTime = xTaskGetTickCount();
 
  	while (1) {
+		if (train == 0)
+		{
 		sequenceur(generation_temps());
+		}
+		else {
+			seqtrain (generation_temps());
+		}
 		vTaskDelayUntil( &xLastWakeTime, 1000/ portTICK_PERIOD_MS);
  	}
 }
