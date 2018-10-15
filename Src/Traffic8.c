@@ -121,6 +121,9 @@ char ph;
 char task;
 bool escape;
 bool capteur;
+ 
+ bool manu; // Mode manuel ON
+ bool suiv; // Passage à l'etape suivante
 
 /* USER CODE END Includes */
 /* USER CODE END PV */
@@ -515,6 +518,25 @@ void command  (void *pvParameters) {
 									debut.min   = v_temps.min;
 									debut.sec   = v_temps.sec;
 						}
+						break;
+						
+						case 'M':
+							printf("Mode Manuel");
+							manu = true;
+						break;
+						
+						case 'N':
+							if (manu) {
+								printf("Etape suivante");
+								suiv = true;
+							}
+							else {
+								printf("Veuillez passer en mode manuel");
+							}
+						break;
+						case 'E':
+								manu = false;
+								printf ("Mode automatique");
 						break;
 				}   
 			}
