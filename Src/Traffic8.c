@@ -126,6 +126,11 @@ bool capteur;
  
  bool manu; // Mode manuel ON
  bool suiv; // Passage à l'etape suivante
+ bool detect_train1; //Detection du train capteur 1
+ bool detect_train2; //Detection du train capteur 2
+ bool passage_train; //Procédure de passage du train en cours (la voie 1 est bloquée, la voie 2 a une procédure normale)
+ bool position_barriere; //position de la barrière : 1 levée, 0 baissée
+ bool feu_rouge1; //voie 1 sur feu rouge uniquement (pas orange)
 
 /* USER CODE END Includes */
 /* USER CODE END PV */
@@ -144,6 +149,8 @@ void sequenceur (bool);
 bool generation_temps ( void) ;
 bool lect_H (char  * )	;
 void affichage_LCD (bool);
+bool moteur_barriere (bool); //retourne 1 si levee et 0 si baissee
+void gestion_train (void);
 
 /* USER CODE END PFP */
 
@@ -302,50 +309,91 @@ void sequenceur (bool valid_seq) {
   
 static char cpt;
 
-
-	if ( valid_seq ) {
+	if ( valid_seq) {
+		
+		gestion_train();
 
 		switch  ( ph ) {
 
 		case 1: // Voie 1 va passer au vert, voie 2 arrï¿½tï¿½e
-		{		
-				HAL_GPIO_WritePin(GPIOB,R1_Pin|O1_Pin|R2_Pin, 1);
-				HAL_GPIO_WritePin(GPIOB, V1_Pin|S1_Pin|V2_Pin|O2_Pin|S2_Pin, 0);
-				cpt= 0;
-				if (manu) {
-					if (suiv) {
-						suiv = false;
-						ph = 2;
-					}
+		{
+				cpt = 0;
+				HAL_GPIO_WritePin(GPIOB, R2_Pin, 1); //la voie 2 est indépendante du passage du train
+				HAL_GPIO_WritePin(GPIOB, V2_Pin|O2_Pin|S2_Pin, 0);
+			
+				if (!passage_train) {			
+					HAL_GPIO_WritePin(GPIOB,R1_Pin|O1_Pin, 1);
+					feu_rouge1 = false;
+					HAL_GPIO_WritePin(GPIOB, V1_Pin|S1_Pin, 0);
+					
 				}
-				else {
-					ph = 2;
+				else {	//si passage du train, le feu1 est rouge et les piétons 1 peuvent traverser
+					feu_rouge1 = true;
+					HAL_GPIO_WritePin(GPIOB,R1_Pin|S1_Pin, 1);
+					HAL_GPIO_WritePin(GPIOB, V1_Pin|O1_Pin, 0);
 				}
 				
+				if (manu) {
+						if (suiv) {
+							suiv = false;
+							ph = 2;
+						}
+					}
+					else {
+						ph = 2;
+				}
+					
 				DPV1 = DPV2 = detect1 = detect2 = 0;
+
 		}
 		break; 
 
 		case 2: // Voie 1 au vert, voie 2 rouge, piï¿½ton 2 vert
 		{
-				 HAL_GPIO_WritePin(GPIOB,V1_Pin|S2_Pin|R2_Pin, 1);
-				 HAL_GPIO_WritePin(GPIOB,R1_Pin|O1_Pin|V2_Pin|O2_Pin|S1_Pin, 0);
-				if (!manu) {
-					if (( ++cpt > 8 ) || DPV1 || ( detect2&&!detect1&&!DPV2 )  ) ph = 3; //Si timer || Si appuie pï¿½tion 1 || (voiture ï¿½ 2 sans piï¿½tion2 & sans voiture1)		
-				}
-				else {
-					if (suiv) {
-						suiv = false;
-						ph = 3;
+				HAL_GPIO_WritePin(GPIOB,S2_Pin|R2_Pin, 1); //la voie 2 est indépendante du passage du train
+				HAL_GPIO_WritePin(GPIOB,V2_Pin|O2_Pin, 0);
+			
+				if (!passage_train) {
+					HAL_GPIO_WritePin(GPIOB,V1_Pin, 1);
+					feu_rouge1 = false;
+					HAL_GPIO_WritePin(GPIOB,R1_Pin|O1_Pin|S1_Pin, 0);
+					
+					if (!manu) {
+						if (( ++cpt > 8 ) || DPV1 || ( detect2&&!detect1&&!DPV2 )  ) ph = 3; //Si timer || Si appuie pï¿½tion 1 || (voiture ï¿½ 2 sans piï¿½tion2 & sans voiture1)		
 					}
+					else {
+						if (suiv) {
+							suiv = false;
+							ph = 3;
+						}
+					}
+				}
+				else {	//si passage du train, le feu1 est rouge et les piétons 1 peuvent traverser
+					feu_rouge1 = true;
+					HAL_GPIO_WritePin(GPIOB,R1_Pin|S1_Pin, 1);
+					HAL_GPIO_WritePin(GPIOB, V1_Pin|O1_Pin, 0);
+					
+					if (( ++cpt > 8 ) || ( detect2&&!DPV2 )  ) ph = 3; //Si timer || (voiture ï¿½ 2 sans piï¿½tion2)		
 				}
 		}
 		break;
 
 		case 3: // Arrï¿½t passage voie 1 => orange 1
-		{		
-				HAL_GPIO_WritePin(GPIOB, O1_Pin|R2_Pin, 1);
-				HAL_GPIO_WritePin (GPIOB, R1_Pin|V1_Pin|S1_Pin|V2_Pin|O2_Pin|S2_Pin, 0);
+		{	
+				HAL_GPIO_WritePin(GPIOB, R2_Pin, 1); //la voie 2 est indépendante du passage du train
+				HAL_GPIO_WritePin (GPIOB, V2_Pin|O2_Pin|S2_Pin, 0);
+			
+				if (!passage_train || position_barriere) { //si le train ne passe pas ou la barrière n'est pas encore baissée
+					HAL_GPIO_WritePin(GPIOB, O1_Pin, 1);
+					HAL_GPIO_WritePin (GPIOB, R1_Pin|V1_Pin|S1_Pin, 0);
+					feu_rouge1 = false;
+				}
+				else {	//si passage du train, le feu1 est rouge et les piétons 1 peuvent traverser
+					feu_rouge1 = true;
+					HAL_GPIO_WritePin(GPIOB,R1_Pin|S1_Pin, 1);
+					HAL_GPIO_WritePin(GPIOB, V1_Pin|O1_Pin, 0);
+				}
+				
 				if (manu) {
 					if (suiv) {
 						suiv = false;
@@ -355,47 +403,79 @@ static char cpt;
 				else {
 					ph = 4;
 				}	
+
 		}
 		break;
 
 		case 4: // Passage rouge 1 et transition 2 vers vert
 		{		
-				HAL_GPIO_WritePin (GPIOB, R1_Pin|R2_Pin|O2_Pin, 1);
-				HAL_GPIO_WritePin (GPIOB, V1_Pin|O1_Pin|S1_Pin|V2_Pin|S2_Pin, 0);
 				cpt = 0;
-				if (manu) {
-					if (suiv) {
-						suiv = false;
-						ph = 5;
+				HAL_GPIO_WritePin (GPIOB, R2_Pin|O2_Pin, 1); //la voie 2 est indépendante du passage du train
+				HAL_GPIO_WritePin (GPIOB, V2_Pin|S2_Pin, 0);
+				
+				if (!passage_train) {
+					HAL_GPIO_WritePin (GPIOB, R1_Pin, 1);
+					feu_rouge1 = true;
+					HAL_GPIO_WritePin (GPIOB, V1_Pin|O1_Pin|S1_Pin, 0);
+					
+					if (!manu) {
+						if (( ++cpt > 8 ) || DPV2 || ( detect1&&!detect2&&!DPV1 )) ph = 6;	// complï¿½ment cond ph2->3
+					}
+					else {
+						if (suiv) {
+							suiv = false;
+							ph = 6;
+						}
 					}
 				}
-				else {
-					ph = 5;
+				else {	//si passage du train, le feu1 est rouge et les piétons 1 peuvent traverser
+					feu_rouge1 = true;
+					HAL_GPIO_WritePin(GPIOB,R1_Pin|S1_Pin, 1);
+					HAL_GPIO_WritePin(GPIOB, V1_Pin|O1_Pin, 0);
+					
+					if (( ++cpt > 8 ) || DPV2 ) ph = 6;	// complï¿½ment cond ph2->3
 				}
+			
 				DPV1 = DPV2 = detect1 = detect2 = 0;
 		}
 		break;
 
 		case 5: // Piï¿½tion 1 vert et voiture2 vert
 		{
-				HAL_GPIO_WritePin (GPIOB, R1_Pin|V2_Pin|S1_Pin, 1);
-				HAL_GPIO_WritePin(GPIOB, V1_Pin|O1_Pin|S2_Pin|R2_Pin|O2_Pin, 0);	
-				if (!manu) {
-					if (( ++cpt > 8 ) || DPV2 || ( detect1&&!detect2&&!DPV1 )) ph = 6;	// complï¿½ment cond ph2->3
+				HAL_GPIO_WritePin (GPIOB, V2_Pin, 1); //la voie 2 est indépendante du passage du train
+				HAL_GPIO_WritePin(GPIOB, S2_Pin|R2_Pin|O2_Pin, 0);	
+			
+				if (!passage_train) {
+					HAL_GPIO_WritePin (GPIOB, R1_Pin|V2_Pin|S1_Pin, 1);
+					feu_rouge1 = true;
+					HAL_GPIO_WritePin(GPIOB, V1_Pin|O1_Pin|S2_Pin|R2_Pin|O2_Pin, 0);	
 				}
-				else {
-					if (suiv) {
-						suiv = false;
-						ph = 6;
-					}
+				else {	//si passage du train, le feu1 est rouge et les piétons 1 peuvent traverser
+					feu_rouge1 = true;
+					HAL_GPIO_WritePin(GPIOB,R1_Pin|S1_Pin, 1);
+					HAL_GPIO_WritePin(GPIOB, V1_Pin|O1_Pin, 0);
 				}
+			
+				
 		}
 		break;
 
 		case 6: //passage vert -> rouge voie 2, voie 1 rouge 
 		{
-				HAL_GPIO_WritePin (GPIOB, R1_Pin|O2_Pin, 1);
-				HAL_GPIO_WritePin (GPIOB, V1_Pin|O1_Pin|S1_Pin|R2_Pin|V2_Pin|S2_Pin, 0);
+				HAL_GPIO_WritePin (GPIOB, O2_Pin, 1); //la voie 2 est indépendante du passage du train
+				HAL_GPIO_WritePin (GPIOB, R2_Pin|V2_Pin|S2_Pin, 0);
+				
+				if (!passage_train) {
+					HAL_GPIO_WritePin (GPIOB, R1_Pin, 1);
+					feu_rouge1 = true;
+					HAL_GPIO_WritePin (GPIOB, V1_Pin|O1_Pin|S1_Pin, 0);
+				}
+				else {	//si passage du train, le feu1 est rouge et les piétons 1 peuvent traverser
+					feu_rouge1 = true;
+					HAL_GPIO_WritePin(GPIOB,R1_Pin|S1_Pin, 1);
+					HAL_GPIO_WritePin(GPIOB, V1_Pin|O1_Pin, 0);
+				}
+					
 				if (manu) {
 					if (suiv) {
 						suiv = false;
@@ -511,7 +591,42 @@ void affichage_LCD (bool passage_autorise) {
 	}
 }
 
+/****************************************************************************/
+/*       				FONCTION Gestion train									*/
+/****************************************************************************/
+bool moteur_barriere (bool monter)
+{
+	return true;
+}
 
+void gestion_train (void) {
+	
+	if (detect_train1 || detect_train2) {
+		passage_train = true;
+	}
+	
+	
+	if (passage_train) {
+			if (!feu_rouge1) { //si le feu 1 n'est pas rouge
+					ph = 3;				 //phase de passage au feu rouge
+			}
+			
+			if (position_barriere) //si la barrière est montée
+			{
+					affichage_LCD(false);
+					position_barriere = moteur_barriere(false); //on baisse la barrière
+			}
+	}
+	else {
+			if (!position_barriere) //si la barrière est baissée
+			{
+					affichage_LCD(false);
+					position_barriere = moteur_barriere(true); //on monte la barrière
+					if (position_barriere) ph = 6; //on redémarre la procédure classique en passant le feu au vert
+			}
+	}
+	
+}
 
 
 /****************************************************************************/
