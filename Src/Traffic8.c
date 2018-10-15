@@ -595,6 +595,15 @@ void command  (void *pvParameters) {
 						break;
 				}   
 			}
+			else if (c == 'N') {
+				if (manu) {
+					printf("Etape suivante");
+					suiv = true;
+				}
+				else {
+					printf("Veuillez passer en mode manuel");
+				}
+			}
 		}
 	}
 }
