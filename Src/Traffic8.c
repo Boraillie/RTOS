@@ -66,14 +66,15 @@
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#define ESC				0x1B				/* Caract�re Escape */
+#define ESC				 0x1B															/* Caract�re Escape */
 #define CTRL_Q     0x11                             // Control+Q character code
 #define CTRL_S     0x13                             // Control+S character code
 #define DEL        0x7F
 #define BACKSPACE  0x08
 #define CR         0x0D
 #define LF         0x0A
-
+#define N 				 0x4E
+#define n 				 0x6E
 
 const char menu[] = 
  
@@ -576,32 +577,23 @@ void command  (void *pvParameters) {
 						break;
 						
 						case 'M':
-							printf("Mode Manuel");
+							printf("\nMode Manuel\n");
 							manu = true;
 						break;
 						
-						case 'N':
-							if (manu) {
-								printf("Etape suivante");
-								suiv = true;
-							}
-							else {
-								printf("Veuillez passer en mode manuel");
-							}
-						break;
 						case 'E':
 								manu = false;
-								printf ("Mode automatique");
+								printf ("\nMode automatique\n");
 						break;
 				}   
 			}
-			else if (c == 'N') {
+			else if (c == N || c == n) {
 				if (manu) {
-					printf("Etape suivante");
+					printf("\nEtape suivante\n");
 					suiv = true;
 				}
 				else {
-					printf("Veuillez passer en mode manuel");
+					printf("\nVeuillez passer en mode manuel\n");
 				}
 			}
 		}
