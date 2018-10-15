@@ -66,7 +66,7 @@
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#define ESC				0x1B				/* Caractère Escape */
+#define ESC				0x1B				/* Caractï¿½re Escape */
 #define CTRL_Q     0x11                             // Control+Q character code
 #define CTRL_S     0x13                             // Control+S character code
 #define DEL        0x7F
@@ -290,7 +290,7 @@ void lecture_BP  (void *pvParameters) {
 }
 
 /****************************************************************************/
-/*       				FONCTION 	SEQUENCEUR								*/
+/*       				FONCTION 	SEQUENCEUR																				*/
 /****************************************************************************/
 void sequenceur (bool valid_seq) { 
   
@@ -301,28 +301,43 @@ static char cpt;
 
 		switch  ( ph ) {
 
-		case 1: // Voie 1 va passer au vert, voie 2 arrêtée
+		case 1: // Voie 1 va passer au vert, voie 2 arrï¿½tï¿½e
 		{		
 				HAL_GPIO_WritePin(GPIOB,R1_Pin|O1_Pin|R2_Pin, 1);
 				HAL_GPIO_WritePin(GPIOB, V1_Pin|S1_Pin|V2_Pin|O2_Pin|S2_Pin, 0);
 				cpt= 0;
+				if (manu) {
+					while (!suiv);
+					suiv = false;
+				}
 				ph = 2;
-				DPV1 = DPV2 = detect1 = detect2 = 0;	
+				DPV1 = DPV2 = detect1 = detect2 = 0;
 		}
 		break; 
 
-		case 2: // Voie 1 au vert, voie 2 rouge, piéton 2 vert
+		case 2: // Voie 1 au vert, voie 2 rouge, piï¿½ton 2 vert
 		{
 				 HAL_GPIO_WritePin(GPIOB,V1_Pin|S2_Pin|R2_Pin, 1);
 				 HAL_GPIO_WritePin(GPIOB,R1_Pin|O1_Pin|V2_Pin|O2_Pin|S1_Pin, 0);
-				if (( ++cpt > 8 ) || DPV1 || ( detect2&&!detect1&&!DPV2 )  ) ph = 3; //Si timer || Si appuie pétion 1 || (voiture à 2 sans piétion2 & sans voiture1)		
+				if (!manu) {
+					if (( ++cpt > 8 ) || DPV1 || ( detect2&&!detect1&&!DPV2 )  ) ph = 3; //Si timer || Si appuie pï¿½tion 1 || (voiture ï¿½ 2 sans piï¿½tion2 & sans voiture1)		
+				}
+				else {
+					while (!suiv);
+					suiv = false;
+					ph = 3;
+				}
 		}
 		break;
 
-		case 3: // Arrêt passage voie 1 => orange 1
+		case 3: // Arrï¿½t passage voie 1 => orange 1
 		{		
 				HAL_GPIO_WritePin(GPIOB, O1_Pin|R2_Pin, 1);
 				HAL_GPIO_WritePin (GPIOB, R1_Pin|V1_Pin|S1_Pin|V2_Pin|O2_Pin|S2_Pin, 0);
+				if (manu) {
+					while (!suiv);
+					suiv = false;
+				}
 				ph = 4;			
 		}
 		break;
@@ -332,16 +347,27 @@ static char cpt;
 				HAL_GPIO_WritePin (GPIOB, R1_Pin|R2_Pin|O2_Pin, 1);
 				HAL_GPIO_WritePin (GPIOB, V1_Pin|O1_Pin|S1_Pin|V2_Pin|S2_Pin, 0);
 				cpt = 0;
+				if (manu) {
+					while (!suiv);
+					suiv = false;
+				}
 				ph = 5;	
 				DPV1 = DPV2 = detect1 = detect2 = 0;
 		}
 		break;
 
-		case 5: // Piétion 1 vert et voiture2 vert
+		case 5: // Piï¿½tion 1 vert et voiture2 vert
 		{
 				HAL_GPIO_WritePin (GPIOB, R1_Pin|V2_Pin|S1_Pin, 1);
 				HAL_GPIO_WritePin(GPIOB, V1_Pin|O1_Pin|S2_Pin|R2_Pin|O2_Pin, 0);	
-				if (( ++cpt > 8 ) || DPV2 || ( detect1&&!detect2&&!DPV1 )) ph = 6;	// complément cond ph2->3
+				if (!manu) {
+					if (( ++cpt > 8 ) || DPV2 || ( detect1&&!detect2&&!DPV1 )) ph = 6;	// complï¿½ment cond ph2->3
+				}
+				else {
+					while (!suiv);
+					suiv = false;
+					ph = 6;
+				}
 		}
 		break;
 
@@ -349,6 +375,10 @@ static char cpt;
 		{
 				HAL_GPIO_WritePin (GPIOB, R1_Pin|O2_Pin, 1);
 				HAL_GPIO_WritePin (GPIOB, V1_Pin|O1_Pin|S1_Pin|R2_Pin|V2_Pin|S2_Pin, 0);
+				if (manu) {
+					while (!suiv);
+					suiv = false;
+				}
 				ph = 1;		
 		}
 		break;
@@ -356,9 +386,15 @@ static char cpt;
 	}
 
 	else {
-		HAL_GPIO_WritePin (GPIOB, R1_Pin|V1_Pin|S1_Pin|R2_Pin|V2_Pin|S2_Pin, 0);
-    HAL_GPIO_TogglePin(GPIOB,O1_Pin);
-		HAL_GPIO_TogglePin(GPIOB, O2_Pin);
+		if (manu) {
+			valid_seq = true;
+			ph = 1;
+		}
+		else {
+			HAL_GPIO_WritePin (GPIOB, R1_Pin|V1_Pin|S1_Pin|R2_Pin|V2_Pin|S2_Pin, 0);
+			HAL_GPIO_TogglePin(GPIOB,O1_Pin);
+			HAL_GPIO_TogglePin(GPIOB, O2_Pin);
+		}
 	}
 }
 
@@ -458,7 +494,7 @@ void controleur  (void *pvParameters) {
 /****************************************************************************/
 void command  (void *pvParameters) {                  
   
-	char cmde[16];						// en RAM interne pour accés rapide 
+	char cmde[16];						// en RAM interne pour accï¿½s rapide 
 	char	c;
 	char cnt,i = 0;
   struct print_H aff;
