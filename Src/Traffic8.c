@@ -530,7 +530,7 @@ void seqtrain (bool valid_seq)
 				{		
 						HAL_GPIO_WritePin(GPIOB, R1_Pin|S1_Pin, 1);
 						HAL_GPIO_WritePin (GPIOB, O1_Pin|V1_Pin, 0);
-						ph=5;
+						ph=4;
 						if ( ++cpt_train > 8 ) phtrain = 6;			
 				}
 			break;
@@ -548,7 +548,7 @@ void seqtrain (bool valid_seq)
 						HAL_GPIO_WritePin(GPIOB,R1_Pin|O1_Pin, 1);
 					  HAL_GPIO_WritePin(GPIOB, V1_Pin|S1_Pin, 0);
 						ph=2;
-						if ( ++cpt_train > 8 ) phtrain = 2;			
+						phtrain = 2;			
 				}
 			break;
 			
