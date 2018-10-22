@@ -46,13 +46,13 @@
   ******************************************************************************
   */
 /* Includes ------------------------------------------------------------------*/
-#include "main.h"
+#include "main.h" 
 #include "stm32f1xx_hal.h"
 #include "cmsis_os.h"
 #include "usart.h"
 #include "gpio.h"
 #include "tim.h"
-#include "stm32_hal_legacy.h"
+#include "stm32_hal_legacy.h" // Pour commander la macro moteur
 #include "LCD.h"
 
 
