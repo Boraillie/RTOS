@@ -739,7 +739,7 @@ void command  (void *pvParameters) {
 					break;
 					
 				}   
-			
+			}
 			else if (c == N || c == n) {
 				if (manu) {
 					printf("\nEtape suivante\n");
