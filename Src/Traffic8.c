@@ -69,7 +69,7 @@
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#define ESC				 0x1B															/* Caract�re Escape */
+#define ESC				 0x1B						/* Caractere Escape */
 #define CTRL_Q     0x11                             // Control+Q character code
 #define CTRL_S     0x13                             // Control+S character code
 #define DEL        0x7F
@@ -121,7 +121,9 @@ struct temps v_temps;
 volatile bool DPV1;
 volatile bool DPV2;
 volatile bool detect1;
-volatile bool	detect2;
+volatile bool detect2;
+volatile bool train1;
+volatile bool train2;
 char ph;
 char task;
 bool escape;
@@ -129,8 +131,8 @@ bool capteur;
  
  bool manu; // Mode manuel ON
  bool suiv; // Passage � l'etape suivante
- bool detect_train1; //Detection du train capteur 1
- bool detect_train2; //Detection du train capteur 2
+ bool detect_train1; //Flag train capteur 1
+ bool detect_train2; //Flag train capteur 2
  bool passage_train = false; //Proc�dure de passage du train en cours (la voie 1 est bloqu�e, la voie 2 a une proc�dure normale)
  bool position_barriere; //position de la barri�re : 1 lev�e, 0 baiss�e
  bool feu_rouge1; //voie 1 sur feu rouge uniquement (pas orange)
@@ -631,7 +633,18 @@ bool moteur_barriere (bool monter)
 
 void gestion_train (void) {
 	
-	if (detect_train1 || detect_train2) {
+	if (train1)	{ //le train commence son passage
+		detect_train1 = true;
+	}
+	if (train2 && detect_train1) { //le train atteint le 2ème capteur
+		detect_train1 = false;
+		detect_train2 = true;
+	}
+	if (!train2 && detect_train2) { //le train fini son passage
+		detect_train2 = false;
+	}
+
+	if (detect_train1 || detect_train2) { //le train est entrain de passer
 		passage_train = true;
 	}
 	
@@ -641,18 +654,18 @@ void gestion_train (void) {
 					ph = 3;				 //phase de passage au feu rouge
 			}
 			
-			if (position_barriere) //si la barri�re est mont�e
+			if (position_barriere) //si la barriere est montee
 			{
 					affichage_LCD(false);
 					position_barriere = moteur_barriere(false); //on baisse la barri�re
 			}
 	}
 	else {
-			if (!position_barriere) //si la barri�re est baiss�e
+			if (!position_barriere) //si la barriere est baissee
 			{
 					affichage_LCD(false);
-					position_barriere = moteur_barriere(true); //on monte la barri�re
-					if (position_barriere) ph = 6; //on red�marre la proc�dure classique en passant le feu au vert
+					position_barriere = moteur_barriere(true); //on monte la barriere
+					if (position_barriere) ph = 6; //on redemarre la procedure classique en passant le feu au vert
 			}
 	}
 	
@@ -682,7 +695,7 @@ void controleur  (void *pvParameters) {
 /****************************************************************************/
 void command  (void *pvParameters) {                  
   
-	char cmde[16];						// en RAM interne pour acc�s rapide 
+	char cmde[16];						// en RAM interne pour acces rapide 
 	char	c;
 	char cnt,i = 0;
   struct print_H aff;
