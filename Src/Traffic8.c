@@ -131,7 +131,7 @@ bool capteur;
  bool suiv; // Passage � l'etape suivante
  bool detect_train1; //Detection du train capteur 1
  bool detect_train2; //Detection du train capteur 2
- bool passage_train; //Proc�dure de passage du train en cours (la voie 1 est bloqu�e, la voie 2 a une proc�dure normale)
+ bool passage_train = false; //Proc�dure de passage du train en cours (la voie 1 est bloqu�e, la voie 2 a une proc�dure normale)
  bool position_barriere; //position de la barri�re : 1 lev�e, 0 baiss�e
  bool feu_rouge1; //voie 1 sur feu rouge uniquement (pas orange)
 
@@ -329,7 +329,7 @@ static char cpt;
 
 		switch  ( ph ) {
 
-		case 1: // Voie 1 va passer au vert, voie 2 arr�t�e
+		case 1: // Voie 1 passe au vert, voie 2 arr�t�e
 		{
 				cpt = 0;
 				HAL_GPIO_WritePin(GPIOB, R2_Pin, 1); //la voie 2 est ind�pendante du passage du train
@@ -417,13 +417,13 @@ static char cpt;
 				else {
 					ph = 4;
 				}	
+				
 
 		}
 		break;
 
 		case 4: // Passage rouge 1 et transition 2 vers vert
 		{		
-				cpt = 0;
 				HAL_GPIO_WritePin (GPIOB, R2_Pin|O2_Pin, 1); //la voie 2 est ind�pendante du passage du train
 				HAL_GPIO_WritePin (GPIOB, V2_Pin|S2_Pin, 0);
 				
@@ -433,12 +433,12 @@ static char cpt;
 					HAL_GPIO_WritePin (GPIOB, V1_Pin|O1_Pin|S1_Pin, 0);
 					
 					if (!manu) {
-						if (( ++cpt > 8 ) || DPV2 || ( detect1&&!detect2&&!DPV1 )) ph = 6;	// compl�ment cond ph2->3
+						ph = 5;
 					}
 					else {
 						if (suiv) {
 							suiv = false;
-							ph = 6;
+							ph = 5;
 						}
 					}
 				}
@@ -447,8 +447,9 @@ static char cpt;
 					HAL_GPIO_WritePin(GPIOB,R1_Pin|S1_Pin, 1);
 					HAL_GPIO_WritePin(GPIOB, V1_Pin|O1_Pin, 0);
 					
-					if (( ++cpt > 8 ) || DPV2 ) ph = 6;	// compl�ment cond ph2->3
+					
 				}
+				cpt = 0;
 			
 				DPV1 = DPV2 = detect1 = detect2 = 0;
 		}
@@ -463,11 +464,24 @@ static char cpt;
 					HAL_GPIO_WritePin (GPIOB, R1_Pin|V2_Pin|S1_Pin, 1);
 					feu_rouge1 = true;
 					HAL_GPIO_WritePin(GPIOB, V1_Pin|O1_Pin|S2_Pin|R2_Pin|O2_Pin, 0);	
+					
+					if (!manu) {
+						if (( ++cpt > 8 ) || DPV2 || ( detect1&&!detect2&&!DPV1 )) ph = 6;	// compl�ment cond ph2->3
+					}
+					else {
+						if (suiv) {
+							suiv = false;
+							ph = 6;
+						}
+					}
+				
 				}
 				else {	//si passage du train, le feu1 est rouge et les pi�tons 1 peuvent traverser
 					feu_rouge1 = true;
 					HAL_GPIO_WritePin(GPIOB,R1_Pin|S1_Pin, 1);
 					HAL_GPIO_WritePin(GPIOB, V1_Pin|O1_Pin, 0);
+					
+					if (( ++cpt > 8 ) || DPV2 ) ph = 6;	// compl�ment cond ph2->3
 				}
 			
 				
@@ -483,11 +497,13 @@ static char cpt;
 					HAL_GPIO_WritePin (GPIOB, R1_Pin, 1);
 					feu_rouge1 = true;
 					HAL_GPIO_WritePin (GPIOB, V1_Pin|O1_Pin|S1_Pin, 0);
+					
 				}
 				else {	//si passage du train, le feu1 est rouge et les pi�tons 1 peuvent traverser
 					feu_rouge1 = true;
 					HAL_GPIO_WritePin(GPIOB,R1_Pin|S1_Pin, 1);
 					HAL_GPIO_WritePin(GPIOB, V1_Pin|O1_Pin, 0);
+				
 				}
 					
 				if (manu) {
@@ -736,6 +752,24 @@ void command  (void *pvParameters) {
 					case 'E':
 							manu = false;
 							printf ("\nMode automatique\n");
+					break;
+					
+					case 'A':   
+							printf("motor");
+							__HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_3, 128);
+							__HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_4, 0);
+						
+					break;
+					
+					case 'B':   
+							detect_train1 != detect_train1;
+							printf("detect_train1");
+						
+					break;
+					
+					case 'C':   
+							detect_train2 != detect_train2;
+						
 					break;
 					
 				}   
